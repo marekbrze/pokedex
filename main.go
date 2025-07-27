@@ -1,13 +1,44 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 	"regexp"
 	"strings"
 )
 
+type cliCommand struct {
+	name        string
+	description string
+	callback    func() error
+}
+
 func main() {
-	fmt.Println("Hello, World!")
+	scanner := bufio.NewScanner(os.Stdin)
+	commandRegistry := map[string]cliCommand{
+		"exit": {
+			name:        "exit",
+			description: "Exit the Pokedex",
+			callback:    commandExit,
+		},
+	}
+	fmt.Print("Pokedex > ")
+	for scanner.Scan() {
+		line := scanner.Text()
+		if len(line) == 0 {
+			fmt.Print("Pokedex > ")
+			continue
+		}
+		cleanedInput := cleanInput(line)
+		if len(cleanedInput) == 0 {
+			fmt.Print("Pokedex > ")
+			continue
+		}
+		firstCommand := cleanedInput[0]
+
+		fmt.Print("Pokedex > ")
+	}
 }
 
 func cleanInput(text string) []string {
@@ -15,6 +46,12 @@ func cleanInput(text string) []string {
 		return []string{}
 	}
 	reg := regexp.MustCompile("[^a-z ]+")
-	wordsList := strings.Fields(strings.ToLower(reg.ReplaceAllString(text, "")))
+	wordsList := strings.Fields(reg.ReplaceAllString(strings.ToLower(text), ""))
 	return wordsList
+}
+
+func commandExit() error {
+	fmt.Printf("Closing the Pokedex... Goodbye!")
+	os.Exit(0)
+	return nil
 }
