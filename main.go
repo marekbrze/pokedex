@@ -14,15 +14,16 @@ type cliCommand struct {
 	callback    func() error
 }
 
+var commandRegistry = map[string]cliCommand{
+	"exit": {
+		name:        "exit",
+		description: "Exit the Pokedex",
+		callback:    commandExit,
+	},
+}
+
 func main() {
 	scanner := bufio.NewScanner(os.Stdin)
-	commandRegistry := map[string]cliCommand{
-		"exit": {
-			name:        "exit",
-			description: "Exit the Pokedex",
-			callback:    commandExit,
-		},
-	}
 	fmt.Print("Pokedex > ")
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -36,7 +37,15 @@ func main() {
 			continue
 		}
 		firstCommand := cleanedInput[0]
-
+		command, exists := commandRegistry[firstCommand]
+		if exists {
+			err := command.callback()
+			if err != nil {
+				fmt.Print(fmt.Errorf("error: %w", err))
+			}
+		} else {
+			fmt.Println("Unknown command")
+		}
 		fmt.Print("Pokedex > ")
 	}
 }
