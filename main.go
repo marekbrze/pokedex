@@ -3,30 +3,48 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"net/url"
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/marekbrze/pokedexcli/internal/pokeapi"
 )
+
+type config struct {
+	next     url.URL
+	previous url.URL
+}
 
 type cliCommand struct {
 	name        string
 	description string
-	callback    func() error
+	callback    func(*config) error
 }
 
-var commandRegistry = make(map[string]cliCommand)
+var (
+	PokeConfig      config
+	commandRegistry = make(map[string]cliCommand)
+)
 
 func init() {
-	commandRegistry["exit"] = cliCommand{
-		name:        "exit",
-		description: "Exit the Pokedex",
-		callback:    commandExit,
+	commandRegistry["map"] = cliCommand{
+		name:        "map",
+		description: "Displays pokemon locations",
+		callback:    commandMap,
 	}
 	commandRegistry["help"] = cliCommand{
 		name:        "help",
 		description: "Displays a help message",
 		callback:    commandHelp,
 	}
+	commandRegistry["exit"] = cliCommand{
+		name:        "exit",
+		description: "Exit the Pokedex",
+		callback:    commandExit,
+	}
+	PokeConfig.next = url.URL{}
+	PokeConfig.previous = url.URL{}
 }
 
 func main() {
@@ -46,7 +64,7 @@ func main() {
 		firstCommand := cleanedInput[0]
 		command, exists := commandRegistry[firstCommand]
 		if exists {
-			err := command.callback()
+			err := command.callback(&PokeConfig)
 			if err != nil {
 				fmt.Print(fmt.Errorf("error: %w", err))
 			}
@@ -72,17 +90,26 @@ func getCommandsDescriptions() {
 	}
 }
 
-func commandExit() error {
+func commandExit(config *config) error {
 	fmt.Printf("Closing the Pokedex... Goodbye!")
 	os.Exit(0)
 	return nil
 }
 
-func commandHelp() error {
+func commandHelp(config *config) error {
 	fmt.Println("\nWelcome to the Pokedex!")
 	fmt.Println("Usage:")
 	fmt.Println("")
 	getCommandsDescriptions()
 	fmt.Println("")
+	return nil
+}
+
+func commandMap(config *config) error {
+	text, err := pokeapi.GetLocations(config.next)
+	if err != nil {
+		return err
+	}
+	fmt.Println(text)
 	return nil
 }
