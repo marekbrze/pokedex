@@ -110,15 +110,27 @@ func commandHelp(config *config) error {
 }
 
 func commandMap(config *config) error {
-	text, err := pokeapi.GetLocations(config.next)
+	var err error
+	if config.next == "" {
+		fmt.Println("There are no result.")
+	} else {
+		locations, err := pokeapi.GetLocations(config.next)
+	}
 	if err != nil {
 		return err
 	}
-	fmt.Println(text)
 	return nil
 }
 
 func commandMap2(config *config) error {
-	locations, err := pokeapi.GetLocations(config.previous)
-	return err
+	var err error
+	if config.previous == "" {
+		fmt.Println("There are no result.")
+	} else {
+		locations, err := pokeapi.GetLocations(config.previous)
+	}
+	if err != nil {
+		return err
+	}
+	return nil
 }

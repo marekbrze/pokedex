@@ -1,6 +1,7 @@
 // Package pokeapi helps to connect to the pokeapi
 package pokeapi
 
+import "net/http"
 var baseURL = "https://pokeapi.co/api/v2/"
 
 type LocationResult struct {
@@ -16,5 +17,9 @@ type Location struct {
 }
 
 func GetLocations(link string) (LocationResult, error) {
+	res, err := http.Get(link)
+	if err != nil {
+		return 
+	}
 	return LocationResult{}, nil
 }
