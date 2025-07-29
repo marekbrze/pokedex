@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"net/url"
 	"os"
 	"regexp"
 	"strings"
@@ -12,8 +11,8 @@ import (
 )
 
 type config struct {
-	next     url.URL
-	previous url.URL
+	next     string
+	previous string
 }
 
 type cliCommand struct {
@@ -33,6 +32,11 @@ func init() {
 		description: "Displays pokemon locations",
 		callback:    commandMap,
 	}
+	commandRegistry["mapb"] = cliCommand{
+		name:        "mapb",
+		description: "Displays previous locations page",
+		callback:    commandMap2,
+	}
 	commandRegistry["help"] = cliCommand{
 		name:        "help",
 		description: "Displays a help message",
@@ -43,8 +47,8 @@ func init() {
 		description: "Exit the Pokedex",
 		callback:    commandExit,
 	}
-	PokeConfig.next = url.URL{}
-	PokeConfig.previous = url.URL{}
+	PokeConfig.next = "https://pokeapi.co/api/v2/location-area/"
+	PokeConfig.previous = ""
 }
 
 func main() {
@@ -112,4 +116,9 @@ func commandMap(config *config) error {
 	}
 	fmt.Println(text)
 	return nil
+}
+
+func commandMap2(config *config) error {
+	locations, err := pokeapi.GetLocations(config.previous)
+	return err
 }
