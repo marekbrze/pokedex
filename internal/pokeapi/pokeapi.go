@@ -23,11 +23,9 @@ type Location struct {
 }
 
 func GetLocations(link string) (LocationResult, error) {
-	fmt.Println("Inner test")
 	var locationResult LocationResult
 	res, err := http.Get(link)
 	if err != nil {
-		fmt.Println("Error 1")
 		return LocationResult{}, err
 	}
 
@@ -35,12 +33,10 @@ func GetLocations(link string) (LocationResult, error) {
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		fmt.Println("Error 2")
 		return LocationResult{}, err
 	}
 
 	if err := json.Unmarshal(body, &locationResult); err != nil {
-		fmt.Println("Error 3")
 		return LocationResult{}, nil
 	}
 

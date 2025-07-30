@@ -32,11 +32,11 @@ func init() {
 		description: "Displays pokemon locations",
 		callback:    commandMap,
 	}
-	// commandRegistry["mapb"] = cliCommand{
-	// 	name:        "mapb",
-	// 	description: "Displays previous locations page",
-	// 	callback:    commandMap2,
-	// }
+	commandRegistry["mapb"] = cliCommand{
+		name:        "mapb",
+		description: "Displays previous locations page",
+		callback:    commandMap2,
+	}
 	commandRegistry["help"] = cliCommand{
 		name:        "help",
 		description: "Displays a help message",
@@ -113,31 +113,36 @@ func commandMap(config *config) error {
 	if PokeConfig.next == "" {
 		fmt.Println("There are no result.")
 	} else {
-		fmt.Println("test")
 		locations, err := pokeapi.GetLocations(PokeConfig.next)
-		fmt.Println(locations.Count)
 		if err != nil {
-			fmt.Println("error 4")
 			return err
 		}
-		fmt.Println(len(locations.Results))
+		fmt.Println(locations.Previous)
+		PokeConfig.next = locations.Next
+		PokeConfig.previous = locations.Previous
 		for _, v := range locations.Results {
 			fmt.Println(v.Name)
 		}
-		fmt.Println("End test")
 	}
 	return nil
 }
 
-// func commandMap2(config *config) error {
-// 	var err error
-// 	if config.previous == "" {
-// 		fmt.Println("There are no result.")
-// 	} else {
-// 		locations, err := pokeapi.GetLocations(config.previous)
-// 	}
-// 	if err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }
+func commandMap2(config *config) error {
+	if PokeConfig.previous == "" {
+		fmt.Println("There are no result.")
+	} else {
+		locations, err := pokeapi.GetLocations(PokeConfig.previous)
+		if err != nil {
+			return err
+		}
+		PokeConfig.next = locations.Next
+		PokeConfig.previous = locations.Previous
+		for _, v := range locations.Results {
+			fmt.Println(v.Name)
+		}
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
