@@ -117,7 +117,6 @@ func commandMap(config *config) error {
 		if err != nil {
 			return err
 		}
-		fmt.Println(locations.Previous)
 		PokeConfig.next = locations.Next
 		PokeConfig.previous = locations.Previous
 		for _, v := range locations.Results {
@@ -139,9 +138,6 @@ func commandMap2(config *config) error {
 		PokeConfig.previous = locations.Previous
 		for _, v := range locations.Results {
 			fmt.Println(v.Name)
-		}
-		if err != nil {
-			return err
 		}
 	}
 	return nil

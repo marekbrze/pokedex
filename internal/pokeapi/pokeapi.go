@@ -19,7 +19,7 @@ type LocationResult struct {
 
 type Location struct {
 	Name string
-	Url  string
+	URL  string
 }
 
 func GetLocations(link string) (LocationResult, error) {
