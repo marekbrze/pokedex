@@ -10,7 +10,7 @@ import (
 	"github.com/marekbrze/pokedexcli/internal/pokeapi"
 )
 
-type config struct {
+type Config struct {
 	next     string
 	previous string
 }
@@ -18,11 +18,11 @@ type config struct {
 type cliCommand struct {
 	name        string
 	description string
-	callback    func(*config) error
+	callback    func(*Config) error
 }
 
 var (
-	PokeConfig      config
+	PokeConfig      Config
 	commandRegistry = make(map[string]cliCommand)
 )
 
@@ -94,13 +94,13 @@ func getCommandsDescriptions() {
 	}
 }
 
-func commandExit(config *config) error {
+func commandExit(config *Config) error {
 	fmt.Printf("Closing the Pokedex... Goodbye!")
 	os.Exit(0)
 	return nil
 }
 
-func commandHelp(config *config) error {
+func commandHelp(config *Config) error {
 	fmt.Println("\nWelcome to the Pokedex!")
 	fmt.Println("Usage:")
 	fmt.Println("")
@@ -109,33 +109,32 @@ func commandHelp(config *config) error {
 	return nil
 }
 
-func commandMap(config *config) error {
-	if PokeConfig.next == "" {
-		fmt.Println("There are no result.")
-	} else {
-		locations, err := pokeapi.GetLocations(PokeConfig.next)
-		if err != nil {
-			return err
-		}
-		PokeConfig.next = locations.Next
-		PokeConfig.previous = locations.Previous
-		for _, v := range locations.Results {
-			fmt.Println(v.Name)
-		}
+func commandMap(config *Config) error {
+	err := printLocations(config, PokeConfig.next)
+	if err != nil {
+		return err
 	}
 	return nil
 }
 
-func commandMap2(config *config) error {
-	if PokeConfig.previous == "" {
+func commandMap2(config *Config) error {
+	err := printLocations(config, PokeConfig.previous)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func printLocations(config *Config, url string) error {
+	if url == "" {
 		fmt.Println("There are no result.")
 	} else {
-		locations, err := pokeapi.GetLocations(PokeConfig.previous)
+		locations, err := pokeapi.GetLocations(url)
 		if err != nil {
 			return err
 		}
-		PokeConfig.next = locations.Next
-		PokeConfig.previous = locations.Previous
+		config.next = locations.Next
+		config.previous = locations.Previous
 		for _, v := range locations.Results {
 			fmt.Println(v.Name)
 		}
