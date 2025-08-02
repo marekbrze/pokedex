@@ -88,11 +88,7 @@ func cleanInput(text string) []string {
 	return wordsList
 }
 
-func getCommandsDescriptions() {
-	for _, value := range commandRegistry {
-		fmt.Printf("%v: %v\n", value.name, value.description)
-	}
-}
+// INFO: Commands
 
 func commandExit(config *Config) error {
 	fmt.Printf("Closing the Pokedex... Goodbye!")
@@ -125,6 +121,9 @@ func commandMap2(config *Config) error {
 	return nil
 }
 
+// INFO: Additional functions
+
+// For MAP and MAPB commands
 func printLocations(config *Config, url string) error {
 	if url == "" {
 		fmt.Println("There are no result.")
@@ -140,4 +139,11 @@ func printLocations(config *Config, url string) error {
 		}
 	}
 	return nil
+}
+
+// For HELP commands
+func getCommandsDescriptions() {
+	for _, value := range commandRegistry {
+		fmt.Printf("%v: %v\n", value.name, value.description)
+	}
 }
