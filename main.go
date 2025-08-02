@@ -10,7 +10,9 @@ import (
 	"github.com/marekbrze/pokedexcli/internal/pokeapi"
 )
 
-type Config struct {
+// INFO: Main types
+
+type config struct {
 	next     string
 	previous string
 }
@@ -18,14 +20,15 @@ type Config struct {
 type cliCommand struct {
 	name        string
 	description string
-	callback    func(*Config) error
+	callback    func(*config) error
 }
 
 var (
-	PokeConfig      Config
+	PokeConfig      config
 	commandRegistry = make(map[string]cliCommand)
 )
 
+// INFO: Commands list
 func init() {
 	commandRegistry["map"] = cliCommand{
 		name:        "map",
@@ -51,6 +54,7 @@ func init() {
 	PokeConfig.previous = ""
 }
 
+// INFO: Main Loop
 func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 	fmt.Print("Pokedex > ")
@@ -79,24 +83,15 @@ func main() {
 	}
 }
 
-func cleanInput(text string) []string {
-	if text == "" {
-		return []string{}
-	}
-	reg := regexp.MustCompile("[^a-z ]+")
-	wordsList := strings.Fields(reg.ReplaceAllString(strings.ToLower(text), ""))
-	return wordsList
-}
-
 // INFO: Commands
 
-func commandExit(config *Config) error {
+func commandExit(config *config) error {
 	fmt.Printf("Closing the Pokedex... Goodbye!")
 	os.Exit(0)
 	return nil
 }
 
-func commandHelp(config *Config) error {
+func commandHelp(config *config) error {
 	fmt.Println("\nWelcome to the Pokedex!")
 	fmt.Println("Usage:")
 	fmt.Println("")
@@ -105,7 +100,7 @@ func commandHelp(config *Config) error {
 	return nil
 }
 
-func commandMap(config *Config) error {
+func commandMap(config *config) error {
 	err := printLocations(config, PokeConfig.next)
 	if err != nil {
 		return err
@@ -113,7 +108,7 @@ func commandMap(config *Config) error {
 	return nil
 }
 
-func commandMap2(config *Config) error {
+func commandMap2(config *config) error {
 	err := printLocations(config, PokeConfig.previous)
 	if err != nil {
 		return err
@@ -124,7 +119,7 @@ func commandMap2(config *Config) error {
 // INFO: Additional functions
 
 // For MAP and MAPB commands
-func printLocations(config *Config, url string) error {
+func printLocations(config *config, url string) error {
 	if url == "" {
 		fmt.Println("There are no result.")
 	} else {
@@ -146,4 +141,14 @@ func getCommandsDescriptions() {
 	for _, value := range commandRegistry {
 		fmt.Printf("%v: %v\n", value.name, value.description)
 	}
+}
+
+// For Main REPL loop
+func cleanInput(text string) []string {
+	if text == "" {
+		return []string{}
+	}
+	reg := regexp.MustCompile("[^a-z ]+")
+	wordsList := strings.Fields(reg.ReplaceAllString(strings.ToLower(text), ""))
+	return wordsList
 }
