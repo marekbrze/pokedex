@@ -3,8 +3,11 @@ package pokeapi
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
+
+	"github.com/marekbrze/pokedexcli/internal/pokecache"
 )
 
 var baseURL = "https://pokeapi.co/api/v2/"
@@ -21,20 +24,27 @@ type Location struct {
 	URL  string
 }
 
-func GetLocations(link string) ([]byte, error) {
-	res, err := http.Get(link)
-	if err != nil {
-		return nil, err
+func GetLocations(link string, cache *pokecache.Cache) ([]byte, error) {
+	entry, exist := cache.Get(link)
+	if exist {
+		fmt.Println("Entry from Cache")
+		return entry, nil
+	} else {
+		res, err := http.Get(link)
+		if err != nil {
+			return nil, err
+		}
+
+		defer res.Body.Close()
+
+		body, err := io.ReadAll(res.Body)
+		if err != nil {
+			return nil, err
+		}
+		go cache.Add(link, body)
+		fmt.Println("Entry from API")
+		return body, nil
 	}
-
-	defer res.Body.Close()
-
-	body, err := io.ReadAll(res.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	return body, nil
 }
 
 func UnmarshalLocations(body []byte) (LocationResult, error) {

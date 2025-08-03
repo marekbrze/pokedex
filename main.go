@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/marekbrze/pokedexcli/internal/pokeapi"
+	"github.com/marekbrze/pokedexcli/internal/pokecache"
 )
 
 // INFO: Main types
@@ -15,6 +16,7 @@ import (
 type config struct {
 	next     string
 	previous string
+	cache    *pokecache.Cache
 }
 
 type cliCommand struct {
@@ -57,6 +59,7 @@ func init() {
 // INFO: Main Loop
 func main() {
 	scanner := bufio.NewScanner(os.Stdin)
+	PokeConfig.cache = pokecache.NewCache(5000000)
 	fmt.Print("Pokedex > ")
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -123,7 +126,7 @@ func printLocations(config *config, url string) error {
 	if url == "" {
 		fmt.Println("There are no result.")
 	} else {
-		resp, err := pokeapi.GetLocations(url)
+		resp, err := pokeapi.GetLocations(url, PokeConfig.cache)
 		if err != nil {
 			return err
 		}
