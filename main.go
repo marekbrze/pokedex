@@ -123,7 +123,11 @@ func printLocations(config *config, url string) error {
 	if url == "" {
 		fmt.Println("There are no result.")
 	} else {
-		locations, err := pokeapi.GetLocations(url)
+		resp, err := pokeapi.GetLocations(url)
+		if err != nil {
+			return err
+		}
+		locations, err := pokeapi.UnmarshalLocations(resp)
 		if err != nil {
 			return err
 		}

@@ -3,7 +3,6 @@ package pokeapi
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 )
@@ -22,24 +21,26 @@ type Location struct {
 	URL  string
 }
 
-func GetLocations(link string) (LocationResult, error) {
-	var locationResult LocationResult
+func GetLocations(link string) ([]byte, error) {
 	res, err := http.Get(link)
 	if err != nil {
-		return LocationResult{}, err
+		return nil, err
 	}
 
 	defer res.Body.Close()
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		return LocationResult{}, err
+		return nil, err
 	}
 
+	return body, nil
+}
+
+func UnmarshalLocations(body []byte) (LocationResult, error) {
+	var locationResult LocationResult
 	if err := json.Unmarshal(body, &locationResult); err != nil {
 		return LocationResult{}, nil
 	}
-
-	fmt.Println(locationResult.Count, locationResult.Next)
 	return locationResult, nil
 }
