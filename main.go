@@ -6,6 +6,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/marekbrze/pokedexcli/internal/pokeapi"
 	"github.com/marekbrze/pokedexcli/internal/pokecache"
@@ -22,7 +23,7 @@ type config struct {
 type cliCommand struct {
 	name        string
 	description string
-	callback    func(*config) error
+	callback    func(*config, []string) error
 }
 
 var (
@@ -52,14 +53,14 @@ func init() {
 		description: "Exit the Pokedex",
 		callback:    commandExit,
 	}
-	PokeConfig.next = "https://pokeapi.co/api/v2/location-area/"
+	PokeConfig.next = "https://pokeapi.co/api/v2/location-area/?offset=0&limit=20"
 	PokeConfig.previous = ""
 }
 
 // INFO: Main Loop
 func main() {
 	scanner := bufio.NewScanner(os.Stdin)
-	PokeConfig.cache = pokecache.NewCache(5000000)
+	PokeConfig.cache = pokecache.NewCache(15 * time.Second)
 	fmt.Print("Pokedex > ")
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -74,8 +75,14 @@ func main() {
 		}
 		firstCommand := cleanedInput[0]
 		command, exists := commandRegistry[firstCommand]
-		if exists {
-			err := command.callback(&PokeConfig)
+		if exists && len(cleanedInput) > 1 {
+			fmt.Println("More commands!", cleanedInput[1:])
+			err := command.callback(&PokeConfig, cleanedInput[1:])
+			if err != nil {
+				fmt.Print(fmt.Errorf("error: %w", err))
+			}
+		} else if exists {
+			err := command.callback(&PokeConfig, []string{})
 			if err != nil {
 				fmt.Print(fmt.Errorf("error: %w", err))
 			}
@@ -88,13 +95,13 @@ func main() {
 
 // INFO: Commands
 
-func commandExit(config *config) error {
+func commandExit(config *config, params []string) error {
 	fmt.Printf("Closing the Pokedex... Goodbye!")
 	os.Exit(0)
 	return nil
 }
 
-func commandHelp(config *config) error {
+func commandHelp(config *config, params []string) error {
 	fmt.Println("\nWelcome to the Pokedex!")
 	fmt.Println("Usage:")
 	fmt.Println("")
@@ -103,7 +110,7 @@ func commandHelp(config *config) error {
 	return nil
 }
 
-func commandMap(config *config) error {
+func commandMap(config *config, params []string) error {
 	err := printLocations(config, PokeConfig.next)
 	if err != nil {
 		return err
@@ -111,7 +118,7 @@ func commandMap(config *config) error {
 	return nil
 }
 
-func commandMap2(config *config) error {
+func commandMap2(config *config, params []string) error {
 	err := printLocations(config, PokeConfig.previous)
 	if err != nil {
 		return err
