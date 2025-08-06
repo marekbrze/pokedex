@@ -43,6 +43,11 @@ func init() {
 		description: "Displays previous locations page",
 		callback:    commandMap2,
 	}
+	commandRegistry["explore"] = cliCommand{
+		name:        "explore",
+		description: "List all the pokemon from the region passed as the second argument",
+		callback:    commandExplore,
+	}
 	commandRegistry["help"] = cliCommand{
 		name:        "help",
 		description: "Displays a help message",
@@ -76,7 +81,6 @@ func main() {
 		firstCommand := cleanedInput[0]
 		command, exists := commandRegistry[firstCommand]
 		if exists && len(cleanedInput) > 1 {
-			fmt.Println("More commands!", cleanedInput[1:])
 			err := command.callback(&PokeConfig, cleanedInput[1:])
 			if err != nil {
 				fmt.Print(fmt.Errorf("error: %w", err))
@@ -126,6 +130,14 @@ func commandMap2(config *config, params []string) error {
 	return nil
 }
 
+func commandExplore(config *config, params []string) error {
+	err := printPokemonFromArea(params[0])
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // INFO: Additional functions
 
 // For MAP and MAPB commands
@@ -150,6 +162,24 @@ func printLocations(config *config, url string) error {
 	return nil
 }
 
+// For EXPLORE command
+func printPokemonFromArea(name string) error {
+	resp, err := pokeapi.ExploreLocation(name, PokeConfig.cache)
+	if err != nil {
+		return err
+	}
+	singleLocation, err := pokeapi.UnmarshalSingleLocation(resp)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Exploring %s...\n", singleLocation.Name)
+	fmt.Println("Found Pokemon:")
+	for _, pokemon := range singleLocation.PokemonEncounters {
+		fmt.Println("-", pokemon.Pokemon.Name)
+	}
+	return nil
+}
+
 // For HELP commands
 func getCommandsDescriptions() {
 	for _, value := range commandRegistry {
@@ -162,7 +192,7 @@ func cleanInput(text string) []string {
 	if text == "" {
 		return []string{}
 	}
-	reg := regexp.MustCompile("[^a-z ]+")
+	reg := regexp.MustCompile("[^a-z0-9- ]+")
 	wordsList := strings.Fields(reg.ReplaceAllString(strings.ToLower(text), ""))
 	return wordsList
 }
