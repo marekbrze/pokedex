@@ -12,48 +12,16 @@ import (
 
 var baseURL = "https://pokeapi.co/api/v2/"
 
+type Locations struct {
+	Name string
+	URL  string
+}
+
 type LocationsResult struct {
 	Count    int
 	Next     string
 	Previous string
-	Results  []Location
-}
-
-type SingleLocationResult struct {
-	ID       int    `json:"id"`
-	Name     string `json:"name"`
-	Location struct {
-		Name string `json:"name"`
-		URL  string `json:"url"`
-	} `json:"location"`
-	PokemonEncounters []struct {
-		Pokemon struct {
-			Name string `json:"name"`
-			URL  string `json:"url"`
-		} `json:"pokemon"`
-		VersionDetails []struct {
-			Version struct {
-				Name string `json:"name"`
-				URL  string `json:"url"`
-			} `json:"version"`
-			MaxChance        int `json:"max_chance"`
-			EncounterDetails []struct {
-				MinLevel        int   `json:"min_level"`
-				MaxLevel        int   `json:"max_level"`
-				ConditionValues []any `json:"condition_values"`
-				Chance          int   `json:"chance"`
-				Method          struct {
-					Name string `json:"name"`
-					URL  string `json:"url"`
-				} `json:"method"`
-			} `json:"encounter_details"`
-		} `json:"version_details"`
-	} `json:"pokemon_encounters"`
-}
-
-type Location struct {
-	Name string
-	URL  string
+	Results  []Locations
 }
 
 func GetLocations(link string, cache *pokecache.Cache) ([]byte, error) {
@@ -105,7 +73,7 @@ func ExploreLocation(name string, cache *pokecache.Cache) ([]byte, error) {
 		defer res.Body.Close()
 
 		if res.StatusCode == http.StatusNotFound {
-			return nil, fmt.Errorf("Location not found")
+			return nil, fmt.Errorf("location not found")
 		} else if res.StatusCode != http.StatusOK {
 			return nil, fmt.Errorf("StatusCode: %d", res.StatusCode)
 		}
@@ -119,10 +87,10 @@ func ExploreLocation(name string, cache *pokecache.Cache) ([]byte, error) {
 	}
 }
 
-func UnmarshalSingleLocation(body []byte) (SingleLocationResult, error) {
-	var singleLocationResult SingleLocationResult
+func UnmarshalSingleLocation(body []byte) (Location, error) {
+	var singleLocationResult Location
 	if err := json.Unmarshal(body, &singleLocationResult); err != nil {
-		return SingleLocationResult{}, nil
+		return Location{}, nil
 	}
 	return singleLocationResult, nil
 }
