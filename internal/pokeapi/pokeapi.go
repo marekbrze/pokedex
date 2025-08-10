@@ -27,7 +27,7 @@ type LocationsResult struct {
 func GetLocations(link string, cache *pokecache.Cache) ([]byte, error) {
 	entry, exist := cache.Get(link)
 	if exist {
-		fmt.Println("Entry from Cache")
+		fmt.Println("entry from cache")
 		return entry, nil
 	} else {
 		res, err := http.Get(link)

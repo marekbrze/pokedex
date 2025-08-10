@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"math/rand"
 	"os"
 	"regexp"
 	"strings"
@@ -18,6 +19,7 @@ type config struct {
 	next     string
 	previous string
 	cache    *pokecache.Cache
+	pokedex  map[string]pokeapi.Pokemon
 }
 
 type cliCommand struct {
@@ -43,6 +45,11 @@ func init() {
 		description: "Displays previous locations page",
 		callback:    commandMap2,
 	}
+	commandRegistry["catch"] = cliCommand{
+		name:        "catch",
+		description: "Tries to catch selected Pokemon",
+		callback:    commandCatch,
+	}
 	commandRegistry["explore"] = cliCommand{
 		name:        "explore",
 		description: "List all the pokemon from the region passed as the second argument",
@@ -60,22 +67,22 @@ func init() {
 	}
 	PokeConfig.next = "https://pokeapi.co/api/v2/location-area/?offset=0&limit=20"
 	PokeConfig.previous = ""
+	PokeConfig.pokedex = map[string]pokeapi.Pokemon{}
 }
 
 // INFO: Main Loop
 func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 	PokeConfig.cache = pokecache.NewCache(15 * time.Second)
-	fmt.Print("Pokedex > ")
-	for scanner.Scan() {
+	for {
+		fmt.Print("Pokedex > ")
+		scanner.Scan()
 		line := scanner.Text()
 		if len(line) == 0 {
-			fmt.Print("Pokedex > ")
 			continue
 		}
 		cleanedInput := cleanInput(line)
 		if len(cleanedInput) == 0 {
-			fmt.Print("Pokedex > ")
 			continue
 		}
 		firstCommand := cleanedInput[0]
@@ -83,17 +90,19 @@ func main() {
 		if exists && len(cleanedInput) > 1 {
 			err := command.callback(&PokeConfig, cleanedInput[1:])
 			if err != nil {
-				fmt.Print(fmt.Errorf("error: %w", err))
+				fmt.Printf("Error: %v\n", err)
+				continue
 			}
 		} else if exists {
 			err := command.callback(&PokeConfig, []string{})
 			if err != nil {
-				fmt.Print(fmt.Errorf("error: %w", err))
+				fmt.Printf("Error: %v\n", err)
+				continue
 			}
 		} else {
 			fmt.Println("Unknown command")
+			continue
 		}
-		fmt.Print("Pokedex > ")
 	}
 }
 
@@ -134,6 +143,32 @@ func commandExplore(config *config, params []string) error {
 	err := printPokemonFromArea(params[0])
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func commandCatch(config *config, params []string) error {
+	wantedPokemon := params[0]
+	_, exist := PokeConfig.pokedex[wantedPokemon]
+	if exist {
+		fmt.Println("You already caught this pokemon!")
+	} else {
+		res, err := pokeapi.GetPokemon(wantedPokemon, PokeConfig.cache)
+		if err != nil {
+			return err
+		}
+		pokemon, err := pokeapi.UnmarshalPokemon(res)
+		if err != nil {
+			return err
+		}
+		userChance := rand.Intn(500)
+		fmt.Printf("Throwing a Pokeball at %s...\n", pokemon.Name)
+		if userChance > pokemon.BaseExperience {
+			PokeConfig.pokedex[pokemon.Name] = pokemon
+			fmt.Printf("Congrats! You caught %s!\n", pokemon.Name)
+		} else {
+			fmt.Println(pokemon.Name, "got away!")
+		}
 	}
 	return nil
 }
