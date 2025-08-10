@@ -45,10 +45,20 @@ func init() {
 		description: "Displays previous locations page",
 		callback:    commandMap2,
 	}
+	commandRegistry["pokedex"] = cliCommand{
+		name:        "pokedex",
+		description: "Prints your pokedex",
+		callback:    printPokedex,
+	}
 	commandRegistry["catch"] = cliCommand{
 		name:        "catch",
 		description: "Tries to catch selected Pokemon",
 		callback:    commandCatch,
+	}
+	commandRegistry["inspect"] = cliCommand{
+		name:        "inspect",
+		description: "inspect caught pokemon",
+		callback:    commandInspect,
 	}
 	commandRegistry["explore"] = cliCommand{
 		name:        "explore",
@@ -168,6 +178,39 @@ func commandCatch(config *config, params []string) error {
 			fmt.Printf("Congrats! You caught %s!\n", pokemon.Name)
 		} else {
 			fmt.Println(pokemon.Name, "got away!")
+		}
+	}
+	return nil
+}
+
+func commandInspect(config *config, params []string) error {
+	inspectedPokemon := params[0]
+	pokemon, exists := config.pokedex[inspectedPokemon]
+	if exists {
+		fmt.Println("Name:", pokemon.Name)
+		fmt.Println("Height:", pokemon.Height)
+		fmt.Println("Weight:", pokemon.Weight)
+		fmt.Println("Stats:")
+		for _, v := range pokemon.Stats {
+			fmt.Printf("    -%s: %d\n", v.Stat.Name, v.BaseStat)
+		}
+		fmt.Println("Types:")
+		for _, v := range pokemon.Types {
+			fmt.Printf("    -%s\n", v.Type.Name)
+		}
+	} else {
+		fmt.Println("you have not caught that pokemon")
+	}
+	return nil
+}
+
+func printPokedex(config *config, params []string) error {
+	if len(config.pokedex) == 0 {
+		fmt.Println("You haven't caught any pokemon!")
+	} else {
+		fmt.Println("Your Pokedex:")
+		for k := range config.pokedex {
+			fmt.Printf("    - %s\n", k)
 		}
 	}
 	return nil
